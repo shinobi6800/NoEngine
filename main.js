@@ -17,11 +17,27 @@ const proj = [
     [0, 0, 1]
 ];
 
-const rotMat = (angle) => {
+const rotZMat = (angle) => {
     return [
         [Math.cos(angle), -Math.sin(angle), 0],
         [Math.sin(angle), Math.cos(angle), 0],
         [0 , 0, 1]
+    ];
+}
+
+const rotXMat = (angle) => {
+    return [
+        [1, 0, 0],
+        [0, Math.cos(angle), -Math.sin(angle)],
+        [0 , Math.sin(angle), Math.cos(angle)]
+    ];
+}
+
+const rotYMat = (angle) => {
+    return [
+        [Math.cos(angle), 0, Math.sin(angle)],
+        [0, 1, 0],
+        [-Math.sin(angle), 0, Math.cos(angle)]
     ];
 }
 
@@ -53,18 +69,22 @@ const drawVertex = (x, y) => {
     ctx.fill();
 }
 
-const P = []; // points
+const P = []; // vertices, points
 const center = new Vector(CW2, CH2, 0);
 
 const init = () => {
-    P[0] = new Vector(400, 200, 0);
-    P[1] = new Vector(600, 200, 0);
-    P[2] = new Vector(400, 400, 0);
-    P[3] = new Vector(600, 400, 0);
+    P[0] = new Vector(400, 200, -100);
+    P[1] = new Vector(600, 200, -100);
+    P[2] = new Vector(400, 400, -100);
+    P[3] = new Vector(600, 400, -100);
+    P[4] = new Vector(400, 200, 100);
+    P[5] = new Vector(600, 200, 100);
+    P[6] = new Vector(400, 400, 100);
+    P[7] = new Vector(600, 400, 100);
 }
 
 const engine = () => {
-    angle += 0.01;
+    angle += 0.02;
 
     ctx.clearRect(0, 0, cvs.width, cvs.height);
 
@@ -73,7 +93,9 @@ const engine = () => {
 
     for (let v of P) {
         let translated = new Vector(v.x - center.x, v.y - center.y, v.z - center.z);
-        let rotated = multMat(rotMat(angle), translated);
+        let rotated = multMat(rotYMat(angle), translated);
+        rotated = multMat(rotXMat(angle), rotated);
+        rotated = multMat(rotZMat(angle), rotated);
         let movedBack = new Vector(rotated.x + center.x, rotated.y + center.y, rotated.z + center.z);
         let proj2D = multMat(proj, movedBack);
         
