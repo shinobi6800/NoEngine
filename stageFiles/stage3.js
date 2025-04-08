@@ -10,36 +10,29 @@ const CW2 = CW / 2;
 const CH2 = CH / 2;
 
 let angle = 0;
+let cameraZ = 1000;
+const fov = 500;
 
-const proj = [
-    [1, 0, 0],
-    [0, 1, 0],
+let cameraRotX = 0; // look up/down
+let cameraRotY = 0; // look left/right
+
+const rotZMat = (angle) => [
+    [Math.cos(angle), -Math.sin(angle), 0],
+    [Math.sin(angle),  Math.cos(angle), 0],
     [0, 0, 1]
 ];
 
-const rotZMat = (angle) => {
-    return [
-        [Math.cos(angle), -Math.sin(angle), 0],
-        [Math.sin(angle), Math.cos(angle), 0],
-        [0 , 0, 1]
-    ];
-}
+const rotXMat = (angle) => [
+    [1, 0, 0],
+    [0, Math.cos(angle), -Math.sin(angle)],
+    [0, Math.sin(angle),  Math.cos(angle)]
+];
 
-const rotXMat = (angle) => {
-    return [
-        [1, 0, 0],
-        [0, Math.cos(angle), -Math.sin(angle)],
-        [0 , Math.sin(angle), Math.cos(angle)]
-    ];
-}
-
-const rotYMat = (angle) => {
-    return [
-        [Math.cos(angle), 0, Math.sin(angle)],
-        [0, 1, 0],
-        [-Math.sin(angle), 0, Math.cos(angle)]
-    ];
-}
+const rotYMat = (angle) => [
+    [ Math.cos(angle), 0, Math.sin(angle)],
+    [0, 1, 0],
+    [-Math.sin(angle), 0, Math.cos(angle)]
+];
 
 function multMat(matrix, vector) {
     const x = vector.x;
@@ -53,19 +46,21 @@ function multMat(matrix, vector) {
     };
 }
 
+function perspectiveProject(point, fov, viewerDistance) {
+    const scale = fov / (viewerDistance + point.z);
+    return {
+        x: point.x * scale + CW2,
+        y: point.y * scale + CH2,
+        z: point.z
+    };
+}
+
 class Vector {
     constructor(x = 0, y = 0, z = 0) {
         this.x = x;
         this.y = y;
         this.z = z;
     }
-}
-
-const drawVertex = (x, y) => {
-    ctx.beginPath();
-    ctx.arc(x, y, 5, 0, 2 * Math.PI);
-    ctx.fillStyle = "white";
-    ctx.fill();
 }
 
 const drawLine = (x1, y1, x2, y2) => {
@@ -76,75 +71,66 @@ const drawLine = (x1, y1, x2, y2) => {
     ctx.stroke();
 }
 
-const P = []; // vertices, points
+const P = [];
 const center = new Vector(CW2, CH2, 0);
 
 const init = () => {
-    P[0] = new Vector(400, 200, -100);
-    P[1] = new Vector(600, 200, -100);
-    P[2] = new Vector(400, 400, -100);
-    P[3] = new Vector(600, 400, -100);
-    P[4] = new Vector(400, 200, 100);
-    P[5] = new Vector(600, 200, 100);
-    P[6] = new Vector(400, 400, 100);
-    P[7] = new Vector(600, 400, 100);
+    P[0] = new Vector(-100, -100, -100);
+    P[1] = new Vector( 100, -100, -100);
+    P[2] = new Vector(-100,  100, -100);
+    P[3] = new Vector( 100,  100, -100);
+    P[4] = new Vector(-100, -100,  100);
+    P[5] = new Vector( 100, -100,  100);
+    P[6] = new Vector(-100,  100,  100);
+    P[7] = new Vector( 100,  100,  100);
 }
 
-// Define the triangles (indices of vertices)
 const triangles = [
-    // Front face
-    [0, 1, 2],
-    [1, 3, 2],
-
-    // Back face
-    [5, 4, 7],
-    [4, 6, 7],
-
-    // Left face
-    [4, 0, 6],
-    [0, 2, 6],
-
-    // Right face
-    [1, 5, 3],
-    [5, 7, 3],
-
-    // Top face
-    [4, 5, 0],
-    [5, 1, 0],
-
-    // Bottom face
-    [2, 3, 6],
-    [3, 7, 6],
+    [0, 1, 2], [1, 3, 2],
+    [5, 4, 7], [4, 6, 7],
+    [4, 0, 6], [0, 2, 6],
+    [1, 5, 3], [5, 7, 3],
+    [4, 5, 0], [5, 1, 0],
+    [2, 3, 6], [3, 7, 6]
 ];
 
 const engine = () => {
-    angle += 0.02;
+    // angle += 0.02;
+
+    // Camera control
+    if (K.W) cameraRotX -= 0.02;
+    if (K.S) cameraRotX += 0.02;
+    if (K.A) cameraRotY -= 0.02;
+    if (K.D) cameraRotY += 0.02;
+    if (K.u) cameraZ -= 20;
+    if (K.d) cameraZ += 20;
 
     ctx.clearRect(0, 0, cvs.width, cvs.height);
-
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, cvs.width, cvs.height);
 
     const projected = [];
 
-    // Apply transformations (rotation + projection)
     for (let v of P) {
-        let translated = new Vector(v.x - center.x, v.y - center.y, v.z - center.z);
-        let rotated = multMat(rotYMat(angle), translated);
-        rotated = multMat(rotXMat(angle), rotated);
-        rotated = multMat(rotZMat(angle), rotated);
-        let movedBack = new Vector(rotated.x + center.x, rotated.y + center.y, rotated.z + center.z);
-        let proj2D = multMat(proj, movedBack);
+        let rotated = multMat(rotYMat(angle), v);
+        // rotated = multMat(rotXMat(angle), rotated);
+        // rotated = multMat(rotZMat(angle), rotated);
+
+        // // Apply camera rotation (inverse world rotation)
+        rotated = multMat(rotYMat(-cameraRotY), rotated);
+        rotated = multMat(rotXMat(-cameraRotX), rotated);
+
+        rotated.z += 400;
+
+        let proj2D = perspectiveProject(rotated, fov, cameraZ);
         projected.push(proj2D);
     }
 
-    // Draw triangles
     for (let tri of triangles) {
         const p1 = projected[tri[0]];
         const p2 = projected[tri[1]];
         const p3 = projected[tri[2]];
 
-        // Connect the vertices to draw triangles
         drawLine(p1.x, p1.y, p2.x, p2.y);
         drawLine(p2.x, p2.y, p3.x, p3.y);
         drawLine(p3.x, p3.y, p1.x, p1.y);
