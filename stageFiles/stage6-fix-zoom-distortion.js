@@ -82,86 +82,25 @@ const drawLine = (x1, y1, x2, y2) => {
 const P = [];
 const center = new Vector(CW2, CH2, 0);
 
-class Cube {
-    constructor({ x, y, z, size }) {
-        this.size = size;
-        this.x = x;
-        this.y = y;
-        this.z = z;
-
-        this.V = []; // vertices
-        this.T = [
-            [0, 1, 2], [1, 3, 2],
-            [5, 4, 7], [4, 6, 7],
-            [4, 0, 6], [0, 2, 6],
-            [1, 5, 3], [5, 7, 3],
-            [4, 5, 0], [5, 1, 0],
-            [2, 3, 6], [3, 7, 6]
-        ];; // triangles
-        this.setUp();
-    }
-
-    setUp() {
-        this.V[0] = new Vector(-this.size + this.x, -this.size + this.y, -this.size + this.z);
-        this.V[1] = new Vector(this.size + this.x, -this.size + this.y, -this.size + this.z);
-        this.V[2] = new Vector(-this.size + this.x, this.size + this.y, -this.size + this.z);
-        this.V[3] = new Vector(this.size + this.x, this.size + this.y, -this.size + this.z);
-        this.V[4] = new Vector(-this.size + this.x, -this.size + this.y, this.size + this.z);
-        this.V[5] = new Vector(this.size + this.x, -this.size + this.y, this.size + this.z);
-        this.V[6] = new Vector(-this.size + this.x, this.size + this.y, this.size + this.z);
-        this.V[7] = new Vector(this.size + this.x, this.size + this.y, this.size + this.z);
-    }
-}
-
-const cube1 = new Cube({x: 100, y: 100, z: 0, size: 50});
-const cube2 = new Cube({x: -200, y: 100, z: 0, size: 150});
-const cube3 = new Cube({x: 300, y: 200, z: 0, size: 100});
-
-const world = [
-    cube1,cube2,cube3
-];
-
 const init = () => {
-    
+    P[0] = new Vector(-100, -100, -100);
+    P[1] = new Vector(100, -100, -100);
+    P[2] = new Vector(-100, 100, -100);
+    P[3] = new Vector(100, 100, -100);
+    P[4] = new Vector(-100, -100, 100);
+    P[5] = new Vector(100, -100, 100);
+    P[6] = new Vector(-100, 100, 100);
+    P[7] = new Vector(100, 100, 100);
 }
 
-const projectWorld = (obj) => {
-    const projected = [];
-
-    for (let v of obj.V) {
-        let translated = {
-            x: v.x - cameraPos.x,
-            y: v.y - cameraPos.y,
-            z: v.z - cameraPos.z
-        };
-
-
-        let rotated = multMat(rotYMat(-cameraRotY), translated);
-        rotated = multMat(rotXMat(-cameraRotX), rotated);
-
-        let proj2D = perspectiveProject(rotated, fov, cameraZ);
-
-        if (!proj2D) continue;
-
-        proj2D.x -= cameraPos.x;
-        proj2D.y -= cameraPos.y;
-        proj2D.z -= cameraPos.z;
-
-        projected.push(proj2D);
-    }
-
-    for (let tri of obj.T) {
-        const p1 = projected[tri[0]];
-        const p2 = projected[tri[1]];
-        const p3 = projected[tri[2]];
-
-        if (p1 && p2 && p3) {
-            drawLine(p1.x, p1.y, p2.x, p2.y);
-            drawLine(p2.x, p2.y, p3.x, p3.y);
-            drawLine(p3.x, p3.y, p1.x, p1.y);
-        }
-    }
-}
+const triangles = [
+    [0, 1, 2], [1, 3, 2],
+    [5, 4, 7], [4, 6, 7],
+    [4, 0, 6], [0, 2, 6],
+    [1, 5, 3], [5, 7, 3],
+    [4, 5, 0], [5, 1, 0],
+    [2, 3, 6], [3, 7, 6]
+];
 
 const engine = () => {
     // Camera control
@@ -185,8 +124,40 @@ const engine = () => {
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, cvs.width, cvs.height);
 
-    for(let obj of world) {
-        projectWorld(obj);
+    const projected = [];
+
+    for (let v of P) {
+        let translated = {
+            x: v.x - cameraPos.x,
+            y: v.y - cameraPos.y,
+            z: v.z - cameraPos.z
+        };
+
+
+        let rotated = multMat(rotYMat(-cameraRotY), translated);
+        rotated = multMat(rotXMat(-cameraRotX), rotated);
+
+        let proj2D = perspectiveProject(rotated, fov, cameraZ);
+
+        if (!proj2D) continue;
+
+        proj2D.x -= cameraPos.x;
+        proj2D.y -= cameraPos.y;
+        proj2D.z -= cameraPos.z;
+
+        projected.push(proj2D);
+    }
+
+    for (let tri of triangles) {
+        const p1 = projected[tri[0]];
+        const p2 = projected[tri[1]];
+        const p3 = projected[tri[2]];
+
+        if (p1 && p2 && p3) {
+            drawLine(p1.x, p1.y, p2.x, p2.y);
+            drawLine(p2.x, p2.y, p3.x, p3.y);
+            drawLine(p3.x, p3.y, p1.x, p1.y);
+        }
     }
 
     requestAnimationFrame(engine);
@@ -194,3 +165,30 @@ const engine = () => {
 
 init();
 engine();
+
+
+
+
+
+// class Plane {
+//     constructor({ isHor, x, y, z, size }) {
+//         this.isHor = isHor;
+//         this.x = x;
+//         this.y = y;
+//         this.z = z;
+//         this.size = size;
+//     }
+
+//     setUp() {
+//         if (this.isHor) {
+//             V[0] = new Vector(-this.size + x, -this.size + y, -this.size + z);
+//             V[1] = new Vector(this.size + x, -this.size + y, -this.size + z);
+//             V[2] = new Vector(-this.size + x, -this.size + y, this.size + z);
+//             V[3] = new Vector(this.size + x, -this.size + y, this.size + z);
+//         }
+//     }
+
+//     draw() {
+
+//     }
+// }
