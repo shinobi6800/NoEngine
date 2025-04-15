@@ -170,25 +170,3 @@ engine();
 
 
 
-// class Plane {
-//     constructor({ isHor, x, y, z, size }) {
-//         this.isHor = isHor;
-//         this.x = x;
-//         this.y = y;
-//         this.z = z;
-//         this.size = size;
-//     }
-
-//     setUp() {
-//         if (this.isHor) {
-//             V[0] = new Vector(-this.size + x, -this.size + y, -this.size + z);
-//             V[1] = new Vector(this.size + x, -this.size + y, -this.size + z);
-//             V[2] = new Vector(-this.size + x, -this.size + y, this.size + z);
-//             V[3] = new Vector(this.size + x, -this.size + y, this.size + z);
-//         }
-//     }
-
-//     draw() {
-
-//     }
-// }

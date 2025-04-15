@@ -9,9 +9,6 @@ const CH = cvs.height;
 const CW2 = CW / 2;
 const CH2 = CH / 2;
 
-const texture = new Image();
-texture.src = 'wall4.jpg';
-
 let angle = 0;
 let cameraZ = 1000;
 const fov = 500;
@@ -85,7 +82,6 @@ const drawLine = (x1, y1, x2, y2) => {
 const P = [];
 const center = new Vector(CW2, CH2, 0);
 
-
 class Cube {
     constructor({ x, y, z, size }) {
         this.size = size;
@@ -147,33 +143,22 @@ class Plane {
 }
 
 
-const cube1 = new Cube({ x: 100, y: 100, z: 0, size: 50 });
-const cube2 = new Cube({ x: -200, y: 100, z: 0, size: 150 });
-const cube3 = new Cube({ x: 300, y: 200, z: 0, size: 100 });
+const cube1 = new Cube({x: 100, y: 100, z: 0, size: 50});
+const cube2 = new Cube({x: -200, y: 100, z: 0, size: 150});
+const cube3 = new Cube({x: 300, y: 200, z: 0, size: 100});
 
-const plane1 = new Plane({ isHor: true, x: 20, y: 850, z: 0, size: 600 });
+const plane1 = new Plane({isHor: true, x: 20, y: 850, z: 0, size: 600 });
 
-const cubes = [cube1, cube2, cube3];
-const planes = [plane1];
+const world = [
+    cube1,cube2,cube3,plane1
+];
 
 const init = () => {
-
+    
 }
 
-function drawTriangle(p1, p2, p3, fillColor = 'black') {
-    ctx.beginPath();
-    ctx.moveTo(p1.x, p1.y);
-    ctx.lineTo(p2.x, p2.y);
-    ctx.lineTo(p3.x, p3.y);
-    ctx.closePath();
-
-    ctx.fillStyle = fillColor;
-    ctx.fill();
-}
-
-
-const projectWorld = (obj, queue) => {
-    let projected = [];
+const projectWorld = (obj) => {
+    const projected = [];
 
     for (let v of obj.V) {
         let translated = {
@@ -182,19 +167,17 @@ const projectWorld = (obj, queue) => {
             z: v.z - cameraPos.z
         };
 
+
         let rotated = multMat(rotYMat(-cameraRotY), translated);
         rotated = multMat(rotXMat(-cameraRotX), rotated);
 
         let proj2D = perspectiveProject(rotated, fov, cameraZ);
 
-        if (!proj2D) {
-            projected.push(null);
-            continue;
-        }
+        if (!proj2D) continue;
 
         proj2D.x -= cameraPos.x;
         proj2D.y -= cameraPos.y;
-        proj2D.z = rotated.z; // Keep rotated Z for depth
+        proj2D.z -= cameraPos.z;
 
         projected.push(proj2D);
     }
@@ -205,19 +188,13 @@ const projectWorld = (obj, queue) => {
         const p3 = projected[tri[2]];
 
         if (p1 && p2 && p3) {
-            const avgZ = (p1.z + p2.z + p3.z) / 3;
-
-            queue.push({
-                p1,
-                p2,
-                p3,
-                z: avgZ,
-                color: 'red' // or get it from the object
-            });
+            drawLine(p1.x, p1.y, p2.x, p2.y);
+            drawLine(p2.x, p2.y, p3.x, p3.y);
+            drawLine(p3.x, p3.y, p1.x, p1.y);
         }
     }
-};
-    
+}
+
 const engine = () => {
     // Camera control
     if (K.W) cameraRotX -= 0.02;
@@ -240,39 +217,9 @@ const engine = () => {
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, cvs.width, cvs.height);
 
-    let planeQueue = [];
-    let objQueue = [];
-
-    for (let p of planes) {
-        projectWorld(p, planeQueue);
+    for(let obj of world) {
+        projectWorld(obj);
     }
-
-    for (let c of cubes) {
-        projectWorld(c, objQueue);
-    }
-
-
-    // Sort triangles back to front
-    objQueue.sort((a, b) => b.z - a.z);
-    planeQueue.sort((a, b) => b.z - a.z);
-
-    // Draw sorted triangles
-    for (let tri of planeQueue) {
-        drawTriangle(tri.p1, tri.p2, tri.p3, tri.color);
-        drawLine(tri.p1.x, tri.p1.y, tri.p2.x, tri.p2.y);
-        drawLine(tri.p2.x, tri.p2.y, tri.p3.x, tri.p3.y);
-        drawLine(tri.p3.x, tri.p3.y, tri.p1.x, tri.p1.y);
-    }
-
-    // Draw sorted triangles
-    for (let tri of objQueue) {
-        drawTriangle(tri.p1, tri.p2, tri.p3, tri.color);
-        drawLine(tri.p1.x, tri.p1.y, tri.p2.x, tri.p2.y);
-        drawLine(tri.p2.x, tri.p2.y, tri.p3.x, tri.p3.y);
-        drawLine(tri.p3.x, tri.p3.y, tri.p1.x, tri.p1.y);
-    }
-
-    
 
     requestAnimationFrame(engine);
 }
