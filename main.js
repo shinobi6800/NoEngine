@@ -82,6 +82,53 @@ const drawLine = (x1, y1, x2, y2) => {
     ctx.stroke();
 }
 
+function drawScanline(y, xStart, xEnd) {
+    ctx.beginPath();
+    ctx.moveTo(xStart, y);
+    ctx.lineTo(xEnd, y);
+    ctx.strokeStyle = 'blue';
+    ctx.stroke();
+}
+
+const drawTriangleScanlines = (p1, p2, p3) => {
+    const points = [p1, p2, p3].sort((a, b) => a.y - b.y);
+    const [v0, v1, v2] = points;
+
+    const interp = (a, b, t) => a + (b - a) * t;
+
+    function edge(x0, y0, x1, y1) {
+        const points = [];
+        const dy = y1 - y0;
+        for (let y = Math.ceil(y0); y <= Math.floor(y1); y++) {
+            const t = (y - y0) / dy;
+            const x = interp(x0, x1, t);
+            points.push({ x, y });
+        }
+        return points;
+    }
+
+    // Build edge lists
+    const left = edge(v0.x, v0.y, v2.x, v2.y); // long edge
+    const rightTop = edge(v0.x, v0.y, v1.x, v1.y);
+    const rightBottom = edge(v1.x, v1.y, v2.x, v2.y);
+
+    const fullRight = rightTop.concat(rightBottom);
+
+    const ymin = Math.ceil(v0.y);
+    const ymax = Math.floor(v2.y);
+
+    for (let i = 0; i < ymax - ymin + 1; i++) {
+        const leftX = left[i].x;
+        const rightX = fullRight[i].x;
+        const y = left[i].y;
+
+        const xStart = Math.min(leftX, rightX);
+        const xEnd = Math.max(leftX, rightX);
+
+        drawScanline(y, xStart, xEnd);
+    }
+}
+
 const P = [];
 const center = new Vector(CW2, CH2, 0);
 
@@ -217,7 +264,7 @@ const projectWorld = (obj, queue) => {
         }
     }
 };
-    
+
 const engine = () => {
     // Camera control
     if (K.W) cameraRotX -= 0.02;
@@ -266,13 +313,16 @@ const engine = () => {
 
     // Draw sorted triangles
     for (let tri of objQueue) {
-        drawTriangle(tri.p1, tri.p2, tri.p3, tri.color);
+        // drawTriangle(tri.p1, tri.p2, tri.p3, tri.color);
         drawLine(tri.p1.x, tri.p1.y, tri.p2.x, tri.p2.y);
         drawLine(tri.p2.x, tri.p2.y, tri.p3.x, tri.p3.y);
         drawLine(tri.p3.x, tri.p3.y, tri.p1.x, tri.p1.y);
+
+        drawTriangleScanlines(tri.p1, tri.p2, tri.p3);
+
     }
 
-    
+
 
     requestAnimationFrame(engine);
 }
