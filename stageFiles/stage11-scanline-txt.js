@@ -17,50 +17,6 @@ let angle = 0;
 let cameraZ = 1000;
 const fov = 500;
 
-function fillQuad(tl, tr, br, bl, color, alpha = 0.5, isL = false) {
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = color;
-
-    if (isL) {
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 10; // adjust for strength of glow
-    }
-
-    ctx.beginPath();
-    ctx.moveTo(tl.x, tl.y);
-    ctx.lineTo(tr.x, tr.y);
-    ctx.lineTo(br.x, br.y);
-    ctx.lineTo(bl.x, bl.y);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.restore();
-}
-
-
-function getFaceCenter(tl, tr, br, bl) {
-    return {
-        x: (tl.x + tr.x + br.x + bl.x) / 4,
-        y: (tl.y + tr.y + br.y + bl.y) / 4,
-        z: (tl.z + tr.z + br.z + bl.z) / 4,
-    };
-}
-
-function getDistance3D(a, b) {
-    return Math.sqrt(
-        (a.x - b.x) ** 2 +
-        (a.y - b.y) ** 2 +
-        (a.z - b.z) ** 2
-    );
-}
-
-function getLightIntensity(distance, radius = 300) {
-    const falloff = distance / radius;
-    return Math.max(0, 1 - falloff); // Linear falloff
-}
-
-
 const drawLine = (x1, y1, x2, y2) => {
     ctx.beginPath();
     ctx.moveTo(x1, y1);
@@ -68,36 +24,6 @@ const drawLine = (x1, y1, x2, y2) => {
     ctx.strokeStyle = "white";
     ctx.stroke();
 }
-
-function isLineOnScreen(x1, y1, x2, y2, padding = 50) {
-    // Pad the screen edges slightly to account for rotations and rounding
-    const inBounds = (x, y) =>
-        x >= -padding && x <= CW + padding &&
-        y >= -padding && y <= CH + padding;
-
-    return inBounds(x1, y1) || inBounds(x2, y2);
-}
-
-function isLineCompletelyOffScreen(x1, y1, x2, y2) {
-    const w = ctx.canvas.width;
-    const h = ctx.canvas.height;
-
-    // Bounding box of the line
-    const minX = Math.min(x1, x2);
-    const maxX = Math.max(x1, x2);
-    const minY = Math.min(y1, y2);
-    const maxY = Math.max(y1, y2);
-
-    // Entirely outside the screen
-    return (
-        maxX < 0 ||
-        minX > w ||
-        maxY < 0 ||
-        minY > h
-    );
-}
-
-
 
 function drawTxOnFace(tl, bl, tr, br) {
     const steps = Math.ceil(Math.max(
@@ -107,21 +33,18 @@ function drawTxOnFace(tl, bl, tr, br) {
 
 
     for (let i = 0; i < steps; i += 1) {
-        let t = i / steps;
-        let texY = Math.floor(t * texture.height);
+        const t = i / steps;
+        const texY = Math.floor(t * texture.height);
 
         // Interpolate points across the face
-        let leftX = tl.x + (bl.x - tl.x) * t;
-        let leftY = tl.y + (bl.y - tl.y) * t;
+        const leftX = tl.x + (bl.x - tl.x) * t;
+        const leftY = tl.y + (bl.y - tl.y) * t;
 
-        let rightX = tr.x + (br.x - tr.x) * t;
-        let rightY = tr.y + (br.y - tr.y) * t;
+        const rightX = tr.x + (br.x - tr.x) * t;
+        const rightY = tr.y + (br.y - tr.y) * t;
 
         // Draw the texture strip at the interpolated position
-        if (isLineOnScreen(leftX, leftY, rightX, rightY) || !isLineCompletelyOffScreen(leftX, leftY, rightX, rightY)) {
-            drawTextureLine(leftX, leftY, rightX, rightY, texY);
-        }
-
+        drawTextureLine(leftX, leftY, rightX, rightY, texY);
     }
 }
 
@@ -141,13 +64,13 @@ function drawTextureLine(x1, y1, x2, y2, texY) {
     // Draw 1px strip from the texture onto the line
     ctx.drawImage(
         texture,
-        0,
-        texY,
-        texture.width,
+        0, 
+        texY, 
+        texture.width, 
         1, // Source: 1 row from texture
+        0, 
         0,
-        0,
-        width,
+        width, 
         1           // Dest: stretch across the line
     );
 
@@ -189,7 +112,7 @@ function multMat(matrix, vector) {
     };
 }
 
-function perspectiveProject(point, fov, viewerDistance, isL) {
+function perspectiveProject(point, fov, viewerDistance) {
     const z = viewerDistance + point.z;
 
     // Prevent division by zero or negative scale
@@ -199,8 +122,7 @@ function perspectiveProject(point, fov, viewerDistance, isL) {
     return {
         x: point.x * scale + CW2,
         y: point.y * scale + CH2,
-        z: point.z,
-        isL: isL
+        z: point.z
     };
 }
 
@@ -217,11 +139,9 @@ let cameraPos = new Vector(0, 0, 0);
 const P = [];
 const center = new Vector(CW2, CH2, 0);
 
-let lightPos = { x: 600, y: -100, z: -200 };
-
 
 class Cube {
-    constructor({ x, y, z, w = 100, h = 100, d = 100, isL = false }) {
+    constructor({ x, y, z, w = 100, h = 100, d = 100 }) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -229,8 +149,6 @@ class Cube {
         this.w = w / 2; // half width
         this.h = h / 2; // half height
         this.d = d / 2; // half depth
-
-        this.isL = isL;
 
         this.V = [];
         this.F = [
@@ -242,40 +160,7 @@ class Cube {
             [2, 3, 7, 6]  // bottom
         ];
 
-        this.faceBrightness = new Array(6).fill(1); // one brightness per face
-
         this.setUp();
-        if (!this.isL) {
-            this.calcLighting(lightPos);
-        }
-    }
-
-    calcLighting(lightPos, intensity = 500) {
-        for (let i = 0; i < 6; i++) {
-            let face = this.F[i];
-
-            // Get face center
-            let v1 = this.V[face[0]];
-            let v2 = this.V[face[1]];
-            let v3 = this.V[face[2]];
-            let v4 = this.V[face[3]];
-
-            let center = new Vector(
-                (v1.x + v2.x + v3.x + v4.x) / 4,
-                (v1.y + v2.y + v3.y + v4.y) / 4,
-                (v1.z + v2.z + v3.z + v4.z) / 4
-            );
-
-            // Get distance from light
-            let dx = center.x - lightPos.x;
-            let dy = center.y - lightPos.y;
-            let dz = center.z - lightPos.z;
-
-            let dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-            let brightness = Math.min(0.8, (dist * dist) / (intensity * intensity));
-
-            this.faceBrightness[i] = brightness;
-        }
     }
 
     setUp() {
@@ -302,7 +187,7 @@ class Cube {
 const cube1 = new Cube({ x: 0, y: 0, z: 0, w: 200, h: 100, d: 300 });
 const cube2 = new Cube({ x: -200, y: 0, z: 0, w: 100, h: 600, d: 100 });
 const cube3 = new Cube({ x: 300, y: 200, z: 0 });
-const cube4 = new Cube({ ...lightPos, w: 50, h: 50, d: 50, isL: true });
+const cube4 = new Cube({ x: 100, y: 300, z: 0, w: 900, h: 5, d: 900 });
 
 const cubes = [cube1, cube2, cube3, cube4];
 
@@ -311,7 +196,7 @@ const init = () => {
 }
 
 
-const projectWorld = (obj, objIndex, queue) => {
+const projectWorld = (obj, queue) => {
     let projected = [];
 
     for (let v of obj.V) {
@@ -324,7 +209,7 @@ const projectWorld = (obj, objIndex, queue) => {
         let rotated = multMat(rotYMat(-cameraRotY), translated);
         rotated = multMat(rotXMat(-cameraRotX), rotated);
 
-        let proj2D = perspectiveProject(rotated, fov, cameraZ, obj.isL);
+        let proj2D = perspectiveProject(rotated, fov, cameraZ);
 
         if (!proj2D) {
             projected.push(null);
@@ -338,8 +223,7 @@ const projectWorld = (obj, objIndex, queue) => {
         projected.push(proj2D);
     }
 
-    // for (let fac of obj.F) {
-    obj.F.forEach((fac, index) => {
+    for(let fac of obj.F) {
         let i1 = fac[0];
         let i2 = fac[1];
         let i3 = fac[2];
@@ -350,7 +234,7 @@ const projectWorld = (obj, objIndex, queue) => {
         let p3 = projected[i3];
         let p4 = projected[i4];
 
-        if (p1 && p2 && p3 && p4) {
+        if(p1 && p2 && p3 && p4) {
             const avgZ = (p1.z + p2.z + p3.z + p4.z) / 4;
 
             queue.push({
@@ -359,16 +243,11 @@ const projectWorld = (obj, objIndex, queue) => {
                 p3,
                 p4,
                 z: avgZ,
-                isL: obj.isL,
-                objIndex: objIndex,
-                facIndex: index
+                color: 'red'
             });
         }
-    });
+    }
 };
-
-let lVelx = 0;
-let lVelz = 0;
 
 const engine = () => {
     // Camera control
@@ -394,46 +273,22 @@ const engine = () => {
 
     let objQueue = [];
 
-    cubes.forEach((c, i) => {
-        projectWorld(c, i, objQueue);
-
-        if (c.isL) {
-
-            // circular light motion
-            const radius = 300;
-            const speed = 0.002; // radians per frame
-            const angle = performance.now() * speed;
-
-            c.x = Math.cos(angle) * radius;
-            c.z = Math.sin(angle) * radius;
-
-            c.setUp();
-        } else {
-
-            c.calcLighting({ x: cubes[3].x, y: cubes[3].y, z: cubes[3].z });
-        }
-    });
+    for (let c of cubes) {
+        projectWorld(c, objQueue);
+    }
 
     // Sort triangles back to front
     objQueue.sort((a, b) => b.z - a.z);
 
     // Draw sorted faces
-    for (let i = 0; i < objQueue.length; i++) {
-        let oq = objQueue[i];
+    for (let f of objQueue) {
+        drawLine(f.p1.x, f.p1.y, f.p2.x, f.p2.y);
+        drawLine(f.p2.x, f.p2.y, f.p3.x, f.p3.y);
+        drawLine(f.p3.x, f.p3.y, f.p4.x, f.p4.y);
+        drawLine(f.p4.x, f.p4.y, f.p1.x, f.p1.y);
 
-        if (!oq.isL) {
-            drawTxOnFace(oq.p1, oq.p4, oq.p2, oq.p3);
-
-            //calc brightness
-            let obj = cubes[oq.objIndex];
-            let bri = obj.faceBrightness[oq.facIndex];
-            fillQuad(oq.p1, oq.p2, oq.p3, oq.p4, 'black', bri);
-
-        } else {
-            fillQuad(oq.p1, oq.p2, oq.p3, oq.p4, 'yellow', 1, true);
-        }
+        // drawTxOnFace(f.p1, f.p4, f.p2, f.p3);
     }
-
 
     requestAnimationFrame(engine);
 }
