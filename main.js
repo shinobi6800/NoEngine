@@ -177,10 +177,10 @@ const rotYMat = (angle) => [
     [-Math.sin(angle), 0, Math.cos(angle)]
 ];
 
-function multMat(matrix, vector) {
-    const x = vector.x;
-    const y = vector.y;
-    const z = vector.z;
+function multMat(matrix, vertex) {
+    const x = vertex.x;
+    const y = vertex.y;
+    const z = vertex.z;
 
     return {
         x: matrix[0][0] * x + matrix[0][1] * y + matrix[0][2] * z,
@@ -204,7 +204,7 @@ function perspectiveProject(point, fov, viewerDistance, isL) {
     };
 }
 
-class Vector {
+class Vertex {
     constructor(x = 0, y = 0, z = 0) {
         this.x = x;
         this.y = y;
@@ -212,10 +212,10 @@ class Vector {
     }
 }
 
-let cameraPos = new Vector(0, 0, 0);
+let cameraPos = new Vertex(0, 0, 0);
 
 const P = [];
-const center = new Vector(CW2, CH2, 0);
+const center = new Vertex(CW2, CH2, 0);
 
 let lightPos = { x: 600, y: -100, z: -200 };
 
@@ -260,7 +260,7 @@ class Cube {
             let v3 = this.V[face[2]];
             let v4 = this.V[face[3]];
 
-            let center = new Vector(
+            let center = new Vertex(
                 (v1.x + v2.x + v3.x + v4.x) / 4,
                 (v1.y + v2.y + v3.y + v4.y) / 4,
                 (v1.z + v2.z + v3.z + v4.z) / 4
@@ -287,20 +287,20 @@ class Cube {
         const h = this.h;
         const d = this.d;
 
-        this.V[0] = new Vector(-w + x, -h + y, -d + z); // top-left-front
-        this.V[1] = new Vector(w + x, -h + y, -d + z);  // top-right-front
-        this.V[2] = new Vector(-w + x, h + y, -d + z);  // bottom-left-front
-        this.V[3] = new Vector(w + x, h + y, -d + z);   // bottom-right-front
-        this.V[4] = new Vector(-w + x, -h + y, d + z);  // top-left-back
-        this.V[5] = new Vector(w + x, -h + y, d + z);   // top-right-back
-        this.V[6] = new Vector(-w + x, h + y, d + z);   // bottom-left-back
-        this.V[7] = new Vector(w + x, h + y, d + z);    // bottom-right-back
+        this.V[0] = new Vertex(-w + x, -h + y, -d + z); // top-left-front
+        this.V[1] = new Vertex(w + x, -h + y, -d + z);  // top-right-front
+        this.V[2] = new Vertex(-w + x, h + y, -d + z);  // bottom-left-front
+        this.V[3] = new Vertex(w + x, h + y, -d + z);   // bottom-right-front
+        this.V[4] = new Vertex(-w + x, -h + y, d + z);  // top-left-back
+        this.V[5] = new Vertex(w + x, -h + y, d + z);   // top-right-back
+        this.V[6] = new Vertex(-w + x, h + y, d + z);   // bottom-left-back
+        this.V[7] = new Vertex(w + x, h + y, d + z);    // bottom-right-back
     }
 }
 
 
 const cube1 = new Cube({ x: 0, y: 0, z: 0, w: 200, h: 100, d: 300 });
-const cube2 = new Cube({ x: -200, y: 0, z: 0, w: 100, h: 600, d: 100 });
+const cube2 = new Cube({ x: -200, y: 0, z: 0, w: 100, h: 500, d: 100 });
 const cube3 = new Cube({ x: 300, y: 200, z: 0 });
 const cube4 = new Cube({ ...lightPos, w: 50, h: 50, d: 50, isL: true });
 

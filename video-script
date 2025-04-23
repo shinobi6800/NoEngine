@@ -1,0 +1,41 @@
+INTRO
+
+This is a Graphics Engine. Made from scratch with NO shaders, NO Open GL and NO GLSL.
+
+In this video I'm going to walk you through all the steps.
+
+Starting with basic vertex rendering, Matrix multiplications, Camera movements, all the way to texture mapping and even simple lighting calculations.
+
+Were going to be using only Math equations and some JavaScript Wizadry to simulate real 3D graphics.
+
+
+
+BODY 
+
+So to start i referenced my canvas element and made a game loop to render a blank screen.
+
+Now the first thing to note about 3D engines is that this isn't actually 3D. it's a projection of 3D coordinates onto a 2D space.
+
+Everything you see in an engine, even the most minute details are all made of tiny dots all connected as triangles. 
+
+These are called vertices or vertex if it's singular. 
+
+These vertices are moved around the screen space using something called Matrix multiplication, to create the illusion of a 3D enviroment.
+
+Essentially you treat the vertex coordinates (x, y, z) like a 1 dimensional array and multiply it by another array to move the vertex in screen space. 
+
+There's usually an extra column, the homogenous coordinates, But this is only needed if you want to move objects via Matrix multiplication or do more than one transformation at once. 
+
+So the extra coordinate helps you hold translations.
+
+But I'm only doing simple transformations for my engine and since we can move objects by simply offsetting their positions, we'll stick to just 3. Also to keep the math simple.
+
+
+
+// coding part
+
+So
+
+
+
+OUTRO

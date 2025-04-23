@@ -64,12 +64,12 @@ const init = () => {
 }
 
 const engine = () => {
-    angle += 0.01;
+    angle += 0.01;  
 
-    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    ctx.clearRect(0, 0, CW, CH);
 
     ctx.fillStyle = 'black';
-    ctx.fillRect(0, 0, cvs.width, cvs.height);
+    ctx.fillRect(0, 0, CW, CH);
 
     for (let v of P) {
         let translated = new Vector(v.x - center.x, v.y - center.y, v.z - center.z);
