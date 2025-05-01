@@ -86,21 +86,23 @@ Lets add a few more vertices to make this into a cube.
 
 *shows results*
 
-Our vertices now are moving correctly, so we just need to connect them as triangles to form our shape. 
+Now Our vertices are moving correctly, we just need to connect them as triangles to form our shape. 
 
 We first need a function that takes 2 positions x and y and draws a line connecting the 2.
 
 We can then set up a matrix of triangles, where each row represents one triangle, with its values being 3 vertices that make up the 3 points of the triangle. (*show diagram of cube with numbered vertices*)
 
-then in our game loop instead of just drawing the vertex. We push the projected vertices into a seperate array we can access outside the scope. 
+then in our game loop instead of just drawing the vertex. We push the projected vertices into an array we can access outside the scope. 
 
-We loop through our triangle matrix and then use the 3 indexes to get the 3 vertices in the projected array that make up the triangle. The we just simply draw 3 lines to connect the 3 points. 
+We loop through our triangle matrix and then use the 3 indexes to get the 3 vertices in the array that make up the triangle. Then we just simply draw 3 lines to connect the 3 points. 
 
 And as you can see we have our cube made up of triangles, pretty sick.
 
 *shows results*
 
-The system we just created is essentially the foundation of 3D graphics. As long as we have the correct vertex positions and we know how all triangles are connected, You can render pretty much anything.
+The system we just created is what i call the foundation of 3D graphics. As long as we have the correct vertex positions of an object and we know how all triangles are connected, You can render pretty much 
+
+anything.
 
 So if your thinking, we could totally render more complex shapes. You're absolutely correct.
 
@@ -127,7 +129,7 @@ Now that our simulation is working perfectly...let's delete everything *sitcom c
 
 Well...not everything, as cool as this looks, we're not using a Graphics library, so naturally we dont have access to any form of GPU or Hardware acceleration. Meaning our engine is running purely on the CPU.
 
-If we're going to be adding textures and lighting in the future, we'll have to compromise on the amount of vertices and triangles being rendered, so my PC doesnt catch fire.
+If we're going to be adding textures and lighting in the future, we'll sadly have to compromise on the amount of vertices and triangles being rendered, so my PC doesnt catch fire.
 
 For this reason we'll be sticking with only cubes for our engine. And since we're rendering only cubes, we can scrap triangles entirely and render everything as faces instead. 
 
@@ -137,12 +139,12 @@ For this reason we'll be sticking with only cubes for our engine. And since we'r
 
 me1: But you know whats better than a cube
 me2: More cubes?
-me1: Yeah...wait how'd you guess that
+me1: Yes...wait how'd you guess that
 me2: Dude we're literally the same perso...
 
 We can just wrap our code into a cube class, that takes x, y, z, width, height and depth.
 
-Then we use this values to set up each vertex accordingly. 
+Then we use these values to set up each vertex accordingly. 
 
 we'll start with 3 cubes and pass them in a world array.
 
@@ -153,9 +155,9 @@ Now we have multiple cubes rendered.
 
 Next up CAMERAS
 
-Cameras are just basically rotations with perspective. Rather than just moving the objects, You move our camera object and make everything else transform in respect to it.
+Cameras are basically just rotations with perspective. Rather than just moving the objects, We move our camera object and make everything else transform in respect to it.
 
-So we start with a camera class and pass in our key variables. Imcase your wondering the extra z is not a position but a perspective distortion, in simple terms, how far the projected screen is from our eyes.
+So we start with a camera class and pass in our key variables. In case your wondering, the extra z is basically how far the projected screen is from our eyes.
 
 I already have a keyboard control file prepared, so we just need to check which keys are pressed and adjust the variables accordingly.
 
@@ -168,9 +170,70 @@ Translate all objects vertices in respect to the camera position, add our rotati
 
 And as you can see, we have our moving camera. (*future 'sensational' meme*)
 
+The most challenging part of this project for me was texturing. 
 
+See the standard way of rendering textures, is reading the pixels in the image file as UV coordinates. the top left being (0,0), the bottom right being (1,1) and so on.
+
+These values are then used to draw the pixels on each triangle. And as you probably guessed, this is way too performance intensive for our engine, cause again everything is being run on the CPU.
+
+So i came up with my own solution. I call it the Scan-line technique. 
+
+Essentially you draw vertical slices on each face of the cube starting from the left line all the way to the right, the slices are drawn as cuts from our texture image. This technique is borrowed from 
+
+old pseudo 3D engines which used a similar technique to render their walls. 
+
+
+*shows results*
+
+Its quite smooth, but It's still CPU intensive.
+
+The frustrating part is all we need is to render images with skewed edges, that's it. If we could do just that, it would be as easy as just slapping a picture on all faces. 
+
+I some how stumbled upon a library that did this exactly, I gave it a try with hopes that they had a more optimized way of rendering it..... It was even worse lol. *vin boom sound effect*
+
+Turns out their just using a similar technique as mine but with alot more fancy calculations. No hate tho, im probably just not their target audience. 
+
+So sadly this would have to do for now.
+
+*shows results*
+
+
+Which brings me to the part i enjoyed writing the most. "LIGHTING".
+
+Lighting only needs 2 things a light source and a way to dim and brighten each face. 
+
+We can adjust the brightness of each face by drawing a black filled quadilateral on all sides and adjust their opacity.
+
+As for the light source... its just another cube rendered with a solid color and a blur filter. 
+
+*shows results*
+
+Now the setup is complete we just need a way to tell how bright each face should be based on it's distance from the lightsource. 
+
+Since the distance is in world space, we don't need to worry about projection. We just need to find the center of each face, calculate its distance from the light source and store it as an array in the object.
+
+We can then use the brightness values to adjust the opacity of the black quadilaterals.
+
+We add a little rotation movement to the lightsource, and just like that we have lighting.
+
+*shows results*
+
+For funzies i added the sphere back but with just a solid color, I then added the same brightness calculation on all it's triangles.
+
+*shows results*
 
 
 
 
 OUTRO
+
+
+I honetly find it fascinating how you can just casually make stunning scenes like this with just math and some code, it's almost like black magic to be honest.
+
+Which by the way took me a whole month to make mostly cause I just SUCK at math, but... I'm glad it turned out well in the end. 
+
+I plan to make more cool stuff like this in the future maybe with an actual Graphics library so we can go crazy with rendering and not worry about performance too much. 
+
+I'll link all the materials i used to study as well as the source code if you want to dive deeper on your own.
+
+I hope this video was helpful, as always thanks for watching and I'll see you in the next one. God Bless.
