@@ -41,10 +41,10 @@ const rotYMat = (angle) => {
     ];
 }
 
-function multMat(matrix, vector) {
-    const x = vector.x;
-    const y = vector.y;
-    const z = vector.z;
+function multMat(matrix, vertex) {
+    const x = vertex.x;
+    const y = vertex.y;
+    const z = vertex.z;
 
     return {
         x: matrix[0][0] * x + matrix[0][1] * y + matrix[0][2] * z,
@@ -54,7 +54,7 @@ function multMat(matrix, vector) {
 }
 
 
-class Vector {
+class Vertex {
     constructor(x = 0, y = 0, z = 0) {
         this.x = x;
         this.y = y;
@@ -70,17 +70,17 @@ const drawVertex = (x, y) => {
 }
 
 const P = []; // vertices, points
-const center = new Vector(CW2, CH2, 0);
+const center = new Vertex(CW2, CH2, 0);
 
 const init = () => {
-    P[0] = new Vector(400, 200, -100);
-    P[1] = new Vector(600, 200, -100);
-    P[2] = new Vector(400, 400, -100);
-    P[3] = new Vector(600, 400, -100);
-    P[4] = new Vector(400, 200, 100);
-    P[5] = new Vector(600, 200, 100);
-    P[6] = new Vector(400, 400, 100);
-    P[7] = new Vector(600, 400, 100);
+    P[0] = new Vertex(400, 200, -100);
+    P[1] = new Vertex(600, 200, -100);
+    P[2] = new Vertex(400, 400, -100);
+    P[3] = new Vertex(600, 400, -100);
+    P[4] = new Vertex(400, 200, 100);
+    P[5] = new Vertex(600, 200, 100);
+    P[6] = new Vertex(400, 400, 100);
+    P[7] = new Vertex(600, 400, 100);
 }
 
 const engine = () => {
@@ -92,11 +92,11 @@ const engine = () => {
     ctx.fillRect(0, 0, cvs.width, cvs.height);
 
     for (let v of P) {
-        let translated = new Vector(v.x - center.x, v.y - center.y, v.z - center.z);
+        let translated = new Vertex(v.x - center.x, v.y - center.y, v.z - center.z);
         let rotated = multMat(rotYMat(angle), translated);
         rotated = multMat(rotXMat(angle), rotated);
         rotated = multMat(rotZMat(angle), rotated);
-        let movedBack = new Vector(rotated.x + center.x, rotated.y + center.y, rotated.z + center.z);
+        let movedBack = new Vertex(rotated.x + center.x, rotated.y + center.y, rotated.z + center.z);
         let proj2D = multMat(proj, movedBack);
         
         drawVertex(proj2D.x, proj2D.y);

@@ -87,33 +87,33 @@ const init = () => {
     P.length = 0; // Clear existing points
     const radius = 150;
     const segments = 20; // Higher = smoother
-    const rings = 40;
 
     for (let i = 0; i <= segments; i++) {
         const theta = i * Math.PI / segments; // latitude
 
         for (let j = 0; j <= segments; j++) {
-            const phi = j * 2 * Math.PI / segments; // longitude
+            const phi = j * 2 * Math.PI / segments;
 
             const x = radius * Math.sin(theta) * Math.cos(phi);
             const y = radius * Math.sin(theta) * Math.sin(phi);
             const z = radius * Math.cos(theta);
 
-            P.push(new Vector(x, y, z)); // No center offset here!
+            P.push(new Vector(x, y, z));
         }
     }
 
-    for (let i = 0; i < rings - 1; i++) {
-        for (let j = 0; j < segments - 1; j++) {
-            let a = i * segments + j;
-            let b = a + 1;
-            let c = a + segments;
-            let d = c + 1;
+    const pointsPerRow = segments + 1;
 
-            // triangle 1
+    for (let i = 0; i < segments; i++) {
+        for (let j = 0; j < segments; j++) {
+            const a = i * pointsPerRow + j;
+            const b = a + 1;
+            const c = a + pointsPerRow;
+            const d = c + 1;
+    
+            // Triangle 1
             triangles.push([a, b, c]);
-
-            // triangle 2
+            // Triangle 2
             triangles.push([b, d, c]);
         }
     }

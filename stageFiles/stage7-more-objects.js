@@ -9,14 +9,6 @@ const CH = cvs.height;
 const CW2 = CW / 2;
 const CH2 = CH / 2;
 
-let angle = 0;
-let cameraZ = 1000;
-const fov = 500;
-
-
-let cameraRotX = 0; // look up/down
-let cameraRotY = 0; // look left/right
-
 const rotZMat = (angle) => [
     [Math.cos(angle), -Math.sin(angle), 0],
     [Math.sin(angle), Math.cos(angle), 0],
@@ -82,6 +74,33 @@ const drawLine = (x1, y1, x2, y2) => {
 const P = [];
 const center = new Vector(CW2, CH2, 0);
 
+class Camera {
+    constructor({ x, y, z }) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.camZ = 1000;
+        this.fov = 500;
+        this.rotX = 0; // look up/down
+        this.rotY = 0; // look left/right
+    }
+
+    control() {
+        if (K.W) this.rotX -= 0.02;
+        if (K.S) this.rotX += 0.02;
+        if (K.A) this.rotY -= 0.02;
+        if (K.D) this.rotY += 0.02;
+        if (K.u) this.camZ -= 10;
+        if (K.d) this.camZ += 10;
+        if (K.l) {
+            this.x -= Math.cos(this.rotY) * 4;
+        }
+        if (K.r) {
+            this.x += Math.cos(this.rotY) * 4;
+        }
+    }
+}
+
 class Cube {
     constructor({ x, y, z, size }) {
         this.size = size;
@@ -113,6 +132,8 @@ class Cube {
     }
 }
 
+const camera = new Camera({x: 0, y: 0, z: 0});
+
 const cube1 = new Cube({x: 100, y: 100, z: 0, size: 50});
 const cube2 = new Cube({x: -200, y: 100, z: 0, size: 150});
 const cube3 = new Cube({x: 300, y: 200, z: 0, size: 100});
@@ -130,22 +151,22 @@ const projectWorld = (obj) => {
 
     for (let v of obj.V) {
         let translated = {
-            x: v.x - cameraPos.x,
-            y: v.y - cameraPos.y,
-            z: v.z - cameraPos.z
+            x: v.x - camera.x,
+            y: v.y - camera.y,
+            z: v.z - camera.z
         };
 
 
-        let rotated = multMat(rotYMat(-cameraRotY), translated);
-        rotated = multMat(rotXMat(-cameraRotX), rotated);
+        let rotated = multMat(rotYMat(camera.rotY), translated);
+        rotated = multMat(rotXMat(-camera.rotX), rotated);
 
-        let proj2D = perspectiveProject(rotated, fov, cameraZ);
+        let proj2D = perspectiveProject(rotated, camera.fov, camera.camZ);
 
         if (!proj2D) continue;
 
-        proj2D.x -= cameraPos.x;
-        proj2D.y -= cameraPos.y;
-        proj2D.z -= cameraPos.z;
+        proj2D.x -= camera.x;
+        proj2D.y -= camera.y;
+        proj2D.z -= camera.z;
 
         projected.push(proj2D);
     }
@@ -164,22 +185,7 @@ const projectWorld = (obj) => {
 }
 
 const engine = () => {
-    // Camera control
-    if (K.W) cameraRotX -= 0.02;
-    if (K.S) cameraRotX += 0.02;
-    if (K.A) cameraRotY -= 0.02;
-    if (K.D) cameraRotY += 0.02;
-    if (K.u) cameraZ -= 10;
-    if (K.d) cameraZ += 10;
-    if (K.l) {
-        cameraPos.x -= Math.cos(cameraRotY) * 4;
-        cameraPos.z += Math.sin(cameraRotY) * 4;
-    }
-    if (K.r) {
-        cameraPos.x += Math.cos(cameraRotY) * 4;
-        cameraPos.z -= Math.sin(cameraRotY) * 4;
-    }
-
+    camera.control();
 
     ctx.clearRect(0, 0, cvs.width, cvs.height);
     ctx.fillStyle = 'black';

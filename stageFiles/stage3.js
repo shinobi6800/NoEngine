@@ -16,6 +16,12 @@ const fov = 500;
 let cameraRotX = 0; // look up/down
 let cameraRotY = 0; // look left/right
 
+const proj = [
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]
+];
+
 const rotZMat = (angle) => [
     [Math.cos(angle), -Math.sin(angle), 0],
     [Math.sin(angle),  Math.cos(angle), 0],
@@ -34,10 +40,10 @@ const rotYMat = (angle) => [
     [-Math.sin(angle), 0, Math.cos(angle)]
 ];
 
-function multMat(matrix, vector) {
-    const x = vector.x;
-    const y = vector.y;
-    const z = vector.z;
+function multMat(matrix, vertex) {
+    const x = vertex.x;
+    const y = vertex.y;
+    const z = vertex.z;
 
     return {
         x: matrix[0][0] * x + matrix[0][1] * y + matrix[0][2] * z,
@@ -55,7 +61,7 @@ function perspectiveProject(point, fov, viewerDistance) {
     };
 }
 
-class Vector {
+class Vertex {
     constructor(x = 0, y = 0, z = 0) {
         this.x = x;
         this.y = y;
@@ -72,17 +78,17 @@ const drawLine = (x1, y1, x2, y2) => {
 }
 
 const P = [];
-const center = new Vector(CW2, CH2, 0);
+const center = new Vertex(CW2, CH2, 0);
 
 const init = () => {
-    P[0] = new Vector(-100, -100, -100);
-    P[1] = new Vector( 100, -100, -100);
-    P[2] = new Vector(-100,  100, -100);
-    P[3] = new Vector( 100,  100, -100);
-    P[4] = new Vector(-100, -100,  100);
-    P[5] = new Vector( 100, -100,  100);
-    P[6] = new Vector(-100,  100,  100);
-    P[7] = new Vector( 100,  100,  100);
+    P[0] = new Vertex(400, 200, -100);
+    P[1] = new Vertex(600, 200, -100);
+    P[2] = new Vertex(400, 400, -100);
+    P[3] = new Vertex(600, 400, -100);
+    P[4] = new Vertex(400, 200, 100);
+    P[5] = new Vertex(600, 200, 100);
+    P[6] = new Vertex(400, 400, 100);
+    P[7] = new Vertex(600, 400, 100);
 }
 
 const triangles = [
@@ -95,7 +101,7 @@ const triangles = [
 ];
 
 const engine = () => {
-    // angle += 0.02;
+    angle += 0.02;
 
     // Camera control
     if (K.W) cameraRotX -= 0.02;
@@ -112,17 +118,14 @@ const engine = () => {
     const projected = [];
 
     for (let v of P) {
-        let rotated = multMat(rotYMat(angle), v);
-        // rotated = multMat(rotXMat(angle), rotated);
-        // rotated = multMat(rotZMat(angle), rotated);
-
-        // // Apply camera rotation (inverse world rotation)
-        rotated = multMat(rotYMat(-cameraRotY), rotated);
-        rotated = multMat(rotXMat(-cameraRotX), rotated);
-
-        rotated.z += 400;
-
-        let proj2D = perspectiveProject(rotated, fov, cameraZ);
+        let translated = new Vertex(v.x - center.x, v.y - center.y, v.z - center.z);
+        let rotated = multMat(rotYMat(angle), translated);
+        rotated = multMat(rotXMat(angle), rotated);
+        rotated = multMat(rotZMat(angle), rotated);
+        let movedBack = new Vertex(rotated.x + center.x, rotated.y + center.y, rotated.z + center.z);
+        let proj2D = multMat(proj, movedBack);
+        
+        // drawVertex(proj2D.x, proj2D.y);
         projected.push(proj2D);
     }
 
