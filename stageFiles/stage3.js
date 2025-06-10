@@ -10,11 +10,6 @@ const CW2 = CW / 2;
 const CH2 = CH / 2;
 
 let angle = 0;
-let cameraZ = 1000;
-const fov = 500;
-
-let cameraRotX = 0; // look up/down
-let cameraRotY = 0; // look left/right
 
 const proj = [
     [1, 0, 0],
@@ -49,15 +44,6 @@ function multMat(matrix, vertex) {
         x: matrix[0][0] * x + matrix[0][1] * y + matrix[0][2] * z,
         y: matrix[1][0] * x + matrix[1][1] * y + matrix[1][2] * z,
         z: matrix[2][0] * x + matrix[2][1] * y + matrix[2][2] * z
-    };
-}
-
-function perspectiveProject(point, fov, viewerDistance) {
-    const scale = fov / (viewerDistance + point.z);
-    return {
-        x: point.x * scale + CW2,
-        y: point.y * scale + CH2,
-        z: point.z
     };
 }
 

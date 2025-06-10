@@ -58,9 +58,9 @@ const center = new Vector(CW2, CH2, 0);
 
 const init = () => {
     P[0] = new Vector(400, 200, 0);
-    P[1] = new Vector(600, 200, 0);
-    P[2] = new Vector(400, 400, 0);
-    P[3] = new Vector(600, 400, 0);
+    // P[1] = new Vector(600, 200, 0);
+    // P[2] = new Vector(400, 400, 0);
+    // P[3] = new Vector(600, 400, 0);
 }
 
 const engine = () => {
@@ -72,12 +72,12 @@ const engine = () => {
     ctx.fillRect(0, 0, CW, CH);
 
     for (let v of P) {
-        let translated = new Vector(v.x - center.x, v.y - center.y, v.z - center.z);
-        let rotated = multMat(rotMat(angle), translated);
-        let movedBack = new Vector(rotated.x + center.x, rotated.y + center.y, rotated.z + center.z);
-        let proj2D = multMat(proj, movedBack);
+        // let translated = new Vector(v.x - center.x, v.y - center.y, v.z - center.z);
+        // let rotated = multMat(rotMat(angle), translated);
+        // let movedBack = new Vector(rotated.x + center.x, rotated.y + center.y, rotated.z + center.z);
+        // let proj2D = multMat(proj, movedBack);
         
-        drawVertex(proj2D.x, proj2D.y);
+        drawVertex(v.x, v.y);
     }
 
     requestAnimationFrame(engine);
