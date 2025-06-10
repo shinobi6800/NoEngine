@@ -1,6 +1,6 @@
 ![image](https://github.com/user-attachments/assets/86f609c7-17cb-40b7-81ca-5411ad1507eb)
 
-## The No Engine
+## No Engine
 > **A 3D Graphics Engine made in Javascript with NO Shaders or GLs**  
 
 ## Setup
